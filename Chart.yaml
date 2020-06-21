@@ -1,0 +1,8 @@
+apiVersion: v1
+appVersion: "1.0"
+description: Practica 24 del Master Cloud Apps
+name: practica24
+version: 0.1.0
+maintainers:
+  - email: nkoutsourais@gmail.com
+    name: Neofitos Koutsourais Blazquez

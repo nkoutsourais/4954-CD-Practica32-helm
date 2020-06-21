@@ -1,0 +1,18 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "practica24.mysql.pvc.fullname" . }}
+  labels:
+    app: {{ include "practica24.mysql.fullname" . }}
+  annotations:
+  {{- if .Values.mysql.pv.storageClassName }}
+    volume.beta.kubernetes.io/storage-class: {{ .Values.mysql.pv.storageClassName }}
+  {{- else }}
+    volume.alpha.kubernetes.io/storage-class: default
+  {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.mysql.pv.accessModes }}
+  resources:
+    requests:
+      storage: {{ .Values.mysql.pv.capacity }}

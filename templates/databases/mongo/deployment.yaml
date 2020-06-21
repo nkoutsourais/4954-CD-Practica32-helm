@@ -1,0 +1,32 @@
+{{- $fullName := include "practica24.mongo.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app: {{ $fullName }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $fullName }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ $fullName }}
+    spec:
+      containers:
+      - image: {{ .Values.mongo.image.repository }}
+        name: {{ $fullName }}
+        ports:
+        - containerPort: {{ .Values.mongo.container.port }}
+          name: {{ .Values.mongo.container.portname }}
+        volumeMounts:
+        - name: {{ .Values.mongo.container.volumeMounts.name }}
+          mountPath: {{ .Values.mongo.container.volumeMounts.mountPath | quote }}
+      volumes:
+      - name: {{ .Values.mongo.container.volumeMounts.name }}
+        persistentVolumeClaim:
+            claimName: {{ include "practica24.mongo.pvc.fullname" . }}

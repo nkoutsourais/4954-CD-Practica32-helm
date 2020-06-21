@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "practica24.mysql.pv.fullname" . }}
+  labels:
+    app: {{ include "practica24.mysql.fullname" . }}
+  annotations:
+  {{- if .Values.mysql.pv.storageClassName }}
+    volume.beta.kubernetes.io/storage-class: {{ .Values.mysql.pv.storageClassName }}
+  {{- else }}
+    volume.alpha.kubernetes.io/storage-class: default
+  {{- end }}
+spec:
+  capacity:
+    storage: {{ .Values.mysql.pv.capacity }}
+  accessModes:
+    - {{ .Values.mysql.pv.accessModes }}
+  hostPath:
+    path: {{ .Values.mysql.pv.hostPath.path | quote }}
+    type: {{ .Values.mysql.pv.hostPath.type }}

@@ -1,0 +1,14 @@
+{{- $fullName := include "practica24.serverapp.fullname" . -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app: {{ $fullName }}
+spec:
+  ports:
+  - port: {{ .Values.serverapp.service.port }}
+    targetPort: {{ .Values.serverapp.service.port }}
+  selector:
+    app: {{ $fullName }}
+  type: {{ .Values.serverapp.service.type }}

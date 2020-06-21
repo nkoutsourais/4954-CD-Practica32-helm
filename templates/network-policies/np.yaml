@@ -1,0 +1,166 @@
+{{- $npDenayAll := include "practica24.np.denyall.fullname" . -}}
+{{- $npRabbitmqName := include "practica24.np.rabbitmq.fullname" . -}}
+{{- $npMongoName := include "practica24.np.mongo.fullname" . -}}
+{{- $npMysqlName := include "practica24.np.mysql.fullname" . -}}
+{{- $npWorkerExternalName := include "practica24.np.externalservice.fullname" . -}}
+{{- $npServerAppName := include "practica24.np.serverapp.fullname" . -}}
+{{- $npWorkerAppName := include "practica24.np.workerapp.fullname" . -}}
+{{- $workerName := include "practica24.workerapp.fullname" . -}}
+{{- $rabbitName := include "practica24.rabbitmq.fullname" . -}}
+{{- $mysqlName := include "practica24.mysql.fullname" . -}}
+{{- $mongoName := include "practica24.mongo.fullname" . -}}
+{{- $externalName := include "practica24.externalservice.fullname" . -}}
+{{- $serverName := include "practica24.serverapp.fullname" . -}}
+{{- if .Values.networkpolicies.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $npDenayAll }}
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $npRabbitmqName }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ $rabbitName }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+    - podSelector:
+        matchLabels:
+          app: {{ $serverName }}
+    - podSelector:
+        matchLabels:
+          app: {{ $workerName }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.rabbitmq.service.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $npMongoName }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ $mongoName }}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+    - podSelector:
+        matchLabels:
+          app: {{ $serverName }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.mongo.service.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $npMysqlName }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ $mysqlName }}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+    - podSelector:
+        matchLabels:
+          app: {{ $workerName }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.mysql.service.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $npWorkerExternalName }}
+spec:
+  podSelector:
+    matchLabels:
+      name: {{ $externalName }}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+    - podSelector:
+        matchLabels:
+          app: {{ $workerName }}
+    ports:
+      - protocol: TCP
+        port: {{ .Values.externalservice.service.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $npServerAppName }}
+spec:
+  podSelector:
+    matchLabels:
+      name: {{ $serverName }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+    - from: []
+  egress:
+  - to:
+    - namespaceSelector: {}
+    - podSelector:
+        matchLabels:
+          app: {{ $mongoName }}
+    - podSelector:
+        matchLabels:
+          app: {{ $rabbitName }}
+  - ports:
+    - port: {{ .Values.mongo.service.port }}
+      protocol: TCP
+    - port: {{ .Values.rabbitmq.service.port }}
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $npWorkerAppName }}
+spec:
+  podSelector:
+    matchLabels:
+      name: {{ $workerName }}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector: {}
+    - podSelector:
+        matchLabels:
+          app: {{ $mysqlName }}
+    - podSelector:
+        matchLabels:
+          app: {{ $rabbitName }}
+    - podSelector:
+        matchLabels:
+          app: {{ $externalName }}
+  - ports:
+    - port: {{ .Values.mysql.service.port }}
+      protocol: TCP
+    - port: {{ .Values.rabbitmq.service.port }}
+      protocol: TCP
+    - port: {{ .Values.externalservice.service.port }}
+      protocol: TCP
+{{- end }}

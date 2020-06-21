@@ -1,0 +1,141 @@
+# Default values for practica24.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+securityContext: 
+  runAsUser: 1000
+
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "1800"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "1800"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  hosts:
+    - host: mastercloudapps.es
+      paths:
+        - /
+        - /server(/|$)(.*)
+  tls: []
+
+networkpolicies:
+  enabled: false
+  npDenayAll: default-deny-all
+  npRabbitmqName: rabbitmq-access
+  npMongoName: dbmongo-access
+  npMysqlName: mysql-access
+  npWorkerExternalName: workerapp-externalservice-access
+  npServerAppName: serverapp-access-egress
+  npWorkerAppName: workerapp-egress
+
+resources: {}
+
+nodeSelector: {}
+
+# Mongo
+mongo:  
+  nameOverride: "dbmongo"
+  service:
+    port: 27017
+  image:
+    repository: mongo
+  container:
+    port: 27017
+    portname: dbmongo
+    volumeMounts:
+      name: mongo-persistent-storage
+      mountPath: "/data/db"
+  pv:
+    nameOverride: "mongo-volume"
+    capacity: 1Gi
+    accessModes: ReadWriteOnce
+    storageClassName: mongo-storage-class-name
+    hostPath:
+      path: "/home/ubuntu/db/mongo"
+      type: DirectoryOrCreate
+  pvc:
+    nameOverride: "mongo-pvc"
+
+# Mysql
+mysql:  
+  nameOverride: "mysql"
+  service:
+    port: 3306
+  image:
+    repository: mysql
+    envs:
+      - name: MYSQL_DATABASE
+        value: test
+      - name: MYSQL_ROOT_PASSWORD
+        value: Zoe.1Pati.2
+  container:
+    port: 3306
+    portname: mysql
+    volumeMounts:
+      name: mysql-persistent-storage
+      mountPath: "/var/lib/mysql"
+  pv:
+    nameOverride: "mysql-volume"
+    capacity: 1Gi
+    accessModes: ReadWriteOnce
+    storageClassName: mysql-storage-class-name
+    hostPath:
+      path: "/home/ubuntu/db/mysql"
+      type: DirectoryOrCreate
+  pvc:
+    nameOverride: "mysql-pvc"
+
+# RabbitMQ
+rabbitmq:
+  nameOverride: "rabbitmq"
+  service:
+    port: 5672
+  image:
+    repository: rabbitmq:3-management
+  container:
+    port: 5672
+    portname: rabbitmq
+
+# Server App
+serverapp:
+  nameOverride: "serverapp"
+  service:
+    port: 8080
+    type: LoadBalancer
+  image:
+    repository: neo182/serverapp
+  container:
+    port: 8080
+    securityContext:
+      runAsUser: 2000
+      allowPrivilegeEscalation: false
+
+# External Service App
+externalservice:
+  nameOverride: "externalservice"
+  service:
+    port: 9090
+    type: LoadBalancer
+    protocol: TCP
+  image:
+    repository: neo182/externalservice
+  container:
+    port: 9090
+    securityContext:
+      runAsUser: 2000
+      allowPrivilegeEscalation: false
+
+#Worker App
+workerapp:
+  nameOverride: "workerapp"
+  image:
+    repository: neo182/workerjib
+  container:
+    envs:
+      database: test
+      dbpassword: Zoe.1Pati.2
+    securityContext:
+      runAsUser: 2000
+      allowPrivilegeEscalation: false

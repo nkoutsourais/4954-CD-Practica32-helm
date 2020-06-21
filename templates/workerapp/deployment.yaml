@@ -1,0 +1,38 @@
+{{- $fullName := include "practica24.workerapp.fullname" . -}}
+{{- $rabbitName := include "practica24.rabbitmq.fullname" . -}}
+{{- $mysqlName := include "practica24.mysql.fullname" . -}}
+{{- $externalName := include "practica24.externalservice.fullname" . -}}
+{{- $externalPort := .Values.externalservice.service.port -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $fullName }}
+  strategy:
+    type: Recreate
+  template: 
+    metadata:
+      labels:
+        app: {{ $fullName }}
+    spec:
+      securityContext:
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+      containers:
+      - image: {{ .Values.workerapp.image.repository }}
+        name: {{ $fullName }}
+        env:
+        - name: GRPC_CLIENT_UPPERCASESERVER_ADDRESS
+          value: static://{{ $externalName }}:{{ $externalPort }}
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://{{ $mysqlName }}/{{ .Values.workerapp.container.envs.database }}
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: {{ .Values.workerapp.container.envs.dbpassword }}
+        - name: SPRING_RABBITMQ_HOST
+          value: {{ $rabbitName }}
+        securityContext:
+          runAsUser: {{ .Values.workerapp.container.securityContext.runAsUser }}
+          allowPrivilegeEscalation: {{ .Values.workerapp.container.securityContext.allowPrivilegeEscalation }}

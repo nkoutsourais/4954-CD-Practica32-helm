@@ -1,0 +1,23 @@
+{{- $fullName := include "practica24.rabbitmq.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $fullName }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ $fullName }}
+    spec:
+      containers:
+      - image: {{ .Values.rabbitmq.image.repository }}
+        name: {{ $fullName }}
+        ports:
+        - containerPort: {{ .Values.rabbitmq.container.port }}
+          name: {{ .Values.rabbitmq.container.portname }}

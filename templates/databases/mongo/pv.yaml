@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "practica24.mongo.pv.fullname" . }}
+  labels:
+    app: {{ include "practica24.mongo.fullname" . }}
+  annotations:
+  {{- if .Values.mongo.pv.storageClassName }}
+    volume.beta.kubernetes.io/storage-class: {{ .Values.mongo.pv.storageClassName }}
+  {{- else }}
+    volume.alpha.kubernetes.io/storage-class: default
+  {{- end }}
+spec:
+  capacity:
+    storage: {{ .Values.mongo.pv.capacity }}
+  accessModes:
+    - {{ .Values.mongo.pv.accessModes }}
+  hostPath:
+    path: {{ .Values.mongo.pv.hostPath.path | quote }}
+    type: {{ .Values.mongo.pv.hostPath.type }}

@@ -1,0 +1,16 @@
+{{- $fullName := include "practica24.externalservice.fullname" . -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app: {{ $fullName }}
+spec:
+  ports:
+  - port: {{ .Values.externalservice.service.port }}
+    targetPort: {{ .Values.externalservice.service.port }}
+    protocol: {{ .Values.externalservice.service.protocol }}
+    name: {{ $fullName }}
+  selector:
+    app: {{ $fullName }}
+  type: {{ .Values.externalservice.service.type }}

@@ -1,0 +1,27 @@
+{{- $fullName := include "practica24.externalservice.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $fullName }}
+  strategy:
+    type: Recreate
+  template: 
+    metadata:
+      labels:
+        app: {{ $fullName }}
+    spec:
+      securityContext:
+        runAsUser:  {{ .Values.securityContext.runAsUser }}
+      containers:
+      - image: {{ .Values.externalservice.image.repository }}
+        name: {{ $fullName }}
+        ports:
+        - containerPort: {{ .Values.externalservice.container.port }}
+        securityContext:
+          runAsUser: {{ .Values.externalservice.container.securityContext.runAsUser }}
+          allowPrivilegeEscalation: {{ .Values.externalservice.container.securityContext.allowPrivilegeEscalation }}
